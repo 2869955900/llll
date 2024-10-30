@@ -56,12 +56,33 @@ if st.button("预测"):
     for i, proba in enumerate(predicted_proba):
         st.write(f"类别 {i}: {proba * 100:.2f}%")
 
-    # 计算 SHAP 值，并显示预测类别的力图
+    # 计算 SHAP 值，并分别提取每个类别的 SHAP 值
     explainer = shap.TreeExplainer(model)
     shap_values = explainer.shap_values(pd.DataFrame([feature_values], columns=feature_names))
-    
-    # 仅显示预测类别的 SHAP 力图
-    shap.force_plot(explainer.expected_value[predicted_class], shap_values[predicted_class], pd.DataFrame([feature_values], columns=feature_names), matplotlib=True)
-    plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
 
+    # 提取每个类别的 SHAP 值
+    shap_values_class_0 = shap_values[:, :, 0]
+    shap_values_class_1 = shap_values[:, :, 1]
+    shap_values_class_2 = shap_values[:, :, 2]
+    shap_values_class_3 = shap_values[:, :, 3]
+    shap_values_class_4 = shap_values[:, :, 4]
+    shap_values_class_5 = shap_values[:, :, 5]
+
+    # 根据预测的类别选择对应的 SHAP 值
+    shap_values_for_predicted_class = [
+        shap_values_class_0, shap_values_class_1, shap_values_class_2,
+        shap_values_class_3, shap_values_class_4, shap_values_class_5
+    ][predicted_class]
+
+    # 绘制预测类别的 SHAP 力图
+    plt.figure()
+    shap.force_plot(
+        explainer.expected_value[predicted_class], 
+        shap_values_for_predicted_class[0],  # 选择单个实例的 SHAP 值
+        pd.DataFrame([feature_values], columns=feature_names),
+        matplotlib=True
+    )
+    plt.savefig("shap_force_plot.png", bbox_inches='tight', dpi=1200)
+    
+    # 在 Streamlit 中显示保存的图片
     st.image("shap_force_plot.png")
